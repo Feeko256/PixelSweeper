@@ -13,14 +13,84 @@
 
     width: max-content;
     height: max-content;
+
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .cell-btn {
     background-color: gray;
-    border: 1px solid blue;
+    color: white;
+    border: 1px solid black;
     font-weight: bold;
     cursor: pointer;
+    width: 35px;
+    height: 35px;
+    box-sizing: border-box;
+    padding: 0;
+    font-size: 11px;
+}
 
+.cell-btn-open-clear {
+    background-color: green;
+    color: white;
+    border: 1px solid black;
+    font-weight: bold;
+    cursor: pointer;
+    width: 35px;
+    height: 35px;
+    box-sizing: border-box;
+    padding: 0;
+    font-size: 11px;
+}
+
+.cell-btn-open-bomb {
+    background-color: orange;
+    color: white;
+    border: 1px solid black;
+    font-weight: bold;
+    cursor: pointer;
+    width: 35px;
+    height: 35px;
+    box-sizing: border-box;
+    padding: 0;
+    font-size: 11px;
+}
+
+.cell-btn-open-bomb-detonaited {
+    background-color: red;
+    color: white;
+    border: 1px solid black;
+    font-weight: bold;
+    cursor: pointer;
+    width: 35px;
+    height: 35px;
+    box-sizing: border-box;
+    padding: 0;
+    font-size: 11px;
+}
+
+.cell-btn-open-bomb-flagged {
+    background-color: lightgreen;
+    color: white;
+    border: 1px solid black;
+    font-weight: bold;
+    cursor: pointer;
+    width: 35px;
+    height: 35px;
+    box-sizing: border-box;
+    padding: 0;
+    font-size: 11px;
+}
+
+.cell-btn-open-flagged {
+    background-color: yellow;
+    color: white;
+    border: 1px solid black;
+    font-weight: bold;
+    cursor: pointer;
     width: 35px;
     height: 35px;
     box-sizing: border-box;

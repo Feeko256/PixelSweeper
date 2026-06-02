@@ -8,7 +8,6 @@ class CellModel {
         this.value = value;
         this.xPos = xPos;
         this.yPos = yPos;
-
     }
 }
 
@@ -16,6 +15,11 @@ class SweeperBackend {
     constructor() {
         this.cells = [];
         this.isfailed = false;
+        this.win = false;
+        this.oppendNoMines = 0;
+        this.totalOppend = 0;
+        this.minesCount = 0;
+        this.minesFlagged = 0;
     }
 
     generateSoftField(size) {
@@ -41,9 +45,10 @@ class SweeperBackend {
         this.cells[index].isFirstCell = true;
     }
 
-    generateMines() {
+    generateMines(mines) {
         const used = new Set();
-        const minesCount = Math.min(10, this.cells.length);
+        const minesCount = Math.min(mines.value, this.cells.length - 1);
+        this.minesCount = minesCount;
 
         while (used.size < minesCount) {
             const index = Math.floor(Math.random() * this.cells.length);
@@ -61,8 +66,6 @@ class SweeperBackend {
     }
 
     openCell(index) {
-        this.findMines();
-
         switch (this.cells[index].isMine) {
             case true: {
                 this.isfailed = true;
@@ -76,6 +79,9 @@ class SweeperBackend {
             }
             case false: {
                 this.openFreeCells(index);
+                if (this.oppendNoMines === (this.cells.length - this.minesCount)) {
+                    this.win = true;
+                }
                 break;
             }
         }
@@ -84,8 +90,6 @@ class SweeperBackend {
     findMines() {
         this.cells.forEach(cell => {
             let counter = 0;
-
-
             if (!cell.isMine) {
                 let x = cell.xPos;
                 let y = cell.yPos;
@@ -112,6 +116,8 @@ class SweeperBackend {
         const cell = this.cells[index];
         if (cell.isOpened || cell.isMine) return;
         cell.isOpened = true;
+        this.oppendNoMines++;
+        this.totalOppend++;
 
         if (cell.value != 0) return;
 
@@ -157,15 +163,18 @@ const create_field = document.getElementById('create-grid-btn');
 const generate_mines = document.getElementById('generate-mines');
 
 const field_size = document.getElementById('field-size');
-const counter = document.getElementById('count');
+const mines_count = document.getElementById('mines-count');
+const counter = document.getElementById('click-counter');
+const win_info = document.getElementById('win-info');
 
 const cellContainer = document.getElementById('cells-list');
 
-let count = 0;
-
 function createGrid() {
-    count = 0;
     backend.isfailed = false;
+    backend.win = false;
+    backend.oppendNoMines = 0;
+    backend.totalOppend = 0;
+    win_info.innerText = 'Состояние: игра';
 
     const totalCells = parseInt(field_size.value);
     const gridSize = Math.round(Math.sqrt(totalCells));
@@ -177,7 +186,7 @@ function createGrid() {
 }
 
 function renderCells() {
-    counter.innerText = count;
+    counter.innerText = `Открыто ячеек: ${backend.totalOppend}`;;
     const allCells = backend.getCells();
 
     cellContainer.innerHTML = '';
@@ -193,48 +202,60 @@ function renderCells() {
                 if (allCells[i].isDetonaited) {
 
                     if (!allCells[i].isFlagged) {
+
+                        button.classList.add('cell-btn-open-bomb-detonaited');
                         button.innerText = '💥';
-                        button.style.backgroundColor = 'red';
-                        button.style.color = 'white';
+
                     }
                     else {
+                        button.classList.add('cell-btn-open-bomb-flagged');
                         button.innerText = '🚩';
-                        button.style.backgroundColor = 'lightgreen';
-                        button.style.color = 'white';
                     }
                 }
                 else {
                     if (!allCells[i].isFlagged) {
+                        button.classList.add('cell-btn-open-bomb');
                         button.innerText = '💣';
-                        button.style.backgroundColor = 'orange';
-                        button.style.color = 'white';
                     }
                     else {
+                        button.classList.add('cell-btn-open-bomb-flagged');
                         button.innerText = '🚩';
-                        button.style.backgroundColor = 'lightgreen';
-                        button.style.color = 'white';
                     }
                 }
 
             } else {
+                button.classList.add('cell-btn-open-clear');
                 button.innerText = allCells[i].value === 0 ? '' : allCells[i].value;
-                button.style.backgroundColor = 'green';
-                button.style.color = 'white';
             }
         }
         else {
-            if (allCells[i].isFlagged) {
+            if (backend.win && allCells[i].isMine && !allCells[i].isFlagged) {
+                button.classList.add('cell-btn-open-bomb-flagged');
+                button.innerText = '💣';
+
+            }
+            else if (allCells[i].isFlagged) {
+                if (backend.win) {
+                    button.classList.add('cell-btn-open-bomb-flagged');
+                } else {
+                    button.classList.add('cell-btn-open-flagged');
+                }
                 button.innerText = '🚩';
-                button.style.backgroundColor = 'yellow'
             }
             else {
                 button.innerText = '';
                 button.style.backgroundColor = '';
             }
+
+
         }
 
-
-
+        if (backend.win) {
+            win_info.innerText = 'Состояние: Победа';
+        }
+        if (backend.isfailed) {
+            win_info.innerText = 'Состояние: Проиграл';
+        }
 
         button.onclick = () => clickOnCell(i);
         button.oncontextmenu = (event) => {
@@ -248,20 +269,20 @@ function renderCells() {
 
 function clickOnCell(index) {
 
-    if (!backend.isfailed) {
-        if (count === 0) {
+    if (!backend.isfailed && !backend.getCells()[index].isFlagged && !backend.getCells()[index].isOpened && backend.win === false) {
+        if (backend.totalOppend === 0) {
             backend.generateNoMinesSpot(index);
-            backend.generateMines();
+            backend.generateMines(mines_count);
+            backend.findMines();
         }
 
         backend.openCell(index);
-        count++;
         renderCells();
     }
 }
 
 function clickToFlag(index) {
-    if (!backend.isfailed) {
+    if (!backend.isfailed && !backend.win) {
         backend.setFlag(index);
         renderCells();
     }
